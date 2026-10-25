@@ -1,6 +1,7 @@
 import pytest
 
 from ..issue_service import IssueService
+from ..exceptions import InvalidIssueError, IssueNotFoundError
 
 
 def test_create_issue_valid():
@@ -18,12 +19,12 @@ def test_create_issue_valid():
 
 
 def test_create_issue_whitespace_title():
-    with pytest.raises(ValueError, match="Empty title not allowed."):
+    with pytest.raises(InvalidIssueError, match="Empty title not allowed."):
         IssueService().create_issue(title="   ", priority=0)
 
 
 def test_create_issue_invalid_priority():
-    with pytest.raises(ValueError, match="Invalid issue priority: 99"):
+    with pytest.raises(InvalidIssueError, match="Invalid issue priority: 99"):
         IssueService().create_issue(
             title="TITLE",
             description="DESC",
@@ -33,7 +34,7 @@ def test_create_issue_invalid_priority():
 
 def test_create_issue_after_failed_creation():
     service = IssueService()
-    with pytest.raises(ValueError, match="Empty title not allowed."):
+    with pytest.raises(InvalidIssueError, match="Empty title not allowed."):
         service.create_issue(title="   ", priority=3)
     assert service.create_issue(
         title="TITLE", priority=0
@@ -47,14 +48,14 @@ def test_create_issue_after_failed_creation():
 
 
 def test_get_issue_unknown_id():
-    with pytest.raises(ValueError, match="Issue not found with id: 0"):
+    with pytest.raises(IssueNotFoundError, match="Issue not found with id: 0"):
         IssueService().get_issue(issue_id=0)
 
 
 def test_update_status_invalid():
     service = IssueService()
     service.create_issue(title="TITLE", priority=2)
-    with pytest.raises(ValueError, match="Invalid issue status: invalid_status"):
+    with pytest.raises(InvalidIssueError, match="Invalid issue status: invalid_status"):
         service.update_status(issue_id=1, status="invalid_status")
     assert service.get_issue(issue_id=1) == {
         "id": 1,
@@ -122,5 +123,5 @@ def test_list_issues_invalid_status():
         title="TITLE",
         priority=0
     )
-    with pytest.raises(ValueError, match="Invalid issue status: invalid_status"):
+    with pytest.raises(InvalidIssueError, match="Invalid issue status: invalid_status"):
         service.list_issues("invalid_status")
